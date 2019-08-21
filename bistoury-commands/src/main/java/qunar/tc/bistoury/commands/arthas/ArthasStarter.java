@@ -52,6 +52,7 @@ public class ArthasStarter {
     }
 
     public synchronized static void start(String nullableAppCode, int pid) throws Exception {
+        logger.info("ArthasStarter start, appCode:{} pid:{}", nullableAppCode, pid);
         Configure configure = getConfigure(nullableAppCode, pid);
         attachAgent(configure);
     }
@@ -126,7 +127,6 @@ public class ArthasStarter {
         configure.setArthasCore(coreJar);
         configure.setIp(TelnetConstants.TELNET_CONNECTION_IP);
         configure.setTelnetPort(ArthasTelnetPortHelper.getTelnetPort(nullableAppCode));
-
         configure.setHttpPort(TelnetConstants.DEFAULT_HTTP_PORT);
         return configure;
     }

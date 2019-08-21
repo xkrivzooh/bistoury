@@ -17,22 +17,19 @@
 
 package qunar.tc.bistoury.commands.arthas.telnet;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.apache.commons.net.telnet.TelnetClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import qunar.tc.bistoury.agent.common.AgentConstants;
-import qunar.tc.bistoury.agent.common.util.AgentUtils;
-import qunar.tc.bistoury.agent.common.util.NetWorkUtils;
-import qunar.tc.bistoury.clientside.common.meta.MetaStore;
-import qunar.tc.bistoury.clientside.common.meta.MetaStores;
 import qunar.tc.bistoury.commands.arthas.ArthasEntity;
 import qunar.tc.bistoury.commands.arthas.ArthasTelnetPortHelper;
 import qunar.tc.bistoury.commands.arthas.TelnetConstants;
 import qunar.tc.bistoury.common.BistouryConstants;
 
 import java.io.IOException;
+import java.util.Objects;
 
 /**
  * @author zhenyu.nie created on 2018 2018/10/15 19:07
@@ -47,7 +44,14 @@ public abstract class AbstractTelnetStore implements TelnetStore {
         check, notCheck
     }
 
-    private ArthasEntity arthasEntity;
+    private static final LoadingCache<ArthasEntityCacheKey, ArthasEntity> ARTHAS_ENTITY_CACHE = CacheBuilder.newBuilder()
+            .build(new CacheLoader<ArthasEntityCacheKey, ArthasEntity>() {
+                @Override
+                public ArthasEntity load(ArthasEntityCacheKey cacheKey) throws Exception {
+                    return new ArthasEntity(cacheKey.getNullableAppCode(), cacheKey.getPid());
+                }
+            });
+
 
     protected AbstractTelnetStore() {
     }
@@ -117,7 +121,7 @@ public abstract class AbstractTelnetStore implements TelnetStore {
                 return forceCreateClient(nullableAppCode, pid);
             }
         } catch (Exception e) {
-            resetClient();
+            resetClient(nullableAppCode, pid);
             throw new IllegalStateException("can not init bistoury, " + e.getMessage(), e);
         }
     }
@@ -139,24 +143,24 @@ public abstract class AbstractTelnetStore implements TelnetStore {
         return null;
     }
 
-    private void resetClient() {
-        this.arthasEntity = null;
+    private void resetClient(String nullableAppCode, int pid) {
+        ArthasEntityCacheKey cacheKey = new ArthasEntityCacheKey(nullableAppCode, pid);
+        ARTHAS_ENTITY_CACHE.invalidate(cacheKey);
     }
 
     private TelnetClient createClient(String nullableAppCode, int pid) throws IOException {
-        if (arthasEntity == null || arthasEntity.getPid() != pid) {
-            return forceCreateClient(nullableAppCode, pid);
-        } else {
+        ArthasEntityCacheKey cacheKey = new ArthasEntityCacheKey(nullableAppCode, pid);
+        if (ARTHAS_ENTITY_CACHE.asMap().containsKey(cacheKey)) {
             return createClient(nullableAppCode);
+        } else {
+            return forceCreateClient(nullableAppCode, pid);
         }
     }
 
     private TelnetClient forceCreateClient(String nullableAppCode, int pid) throws IOException {
-        ArthasEntity arthasEntity = new ArthasEntity(nullableAppCode, pid);
+        ArthasEntity arthasEntity = ARTHAS_ENTITY_CACHE.getUnchecked(new ArthasEntityCacheKey(nullableAppCode, pid));
         arthasEntity.start();
-        TelnetClient client = createClient(nullableAppCode);
-        this.arthasEntity = arthasEntity;
-        return client;
+        return createClient(nullableAppCode);
     }
 
     private TelnetClient createClient(String nullableAppCode) throws IOException {
@@ -164,5 +168,37 @@ public abstract class AbstractTelnetStore implements TelnetStore {
         client.setConnectTimeout(TelnetConstants.TELNET_CONNECT_TIMEOUT);
         client.connect(TelnetConstants.TELNET_CONNECTION_IP, ArthasTelnetPortHelper.getTelnetPort(nullableAppCode));
         return client;
+    }
+
+    private static final class ArthasEntityCacheKey {
+        private final String nullableAppCode;
+        private final int pid;
+
+        ArthasEntityCacheKey(String nullableAppCode, int pid) {
+            this.nullableAppCode = nullableAppCode;
+            this.pid = pid;
+        }
+
+        public String getNullableAppCode() {
+            return nullableAppCode;
+        }
+
+        public int getPid() {
+            return pid;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ArthasEntityCacheKey that = (ArthasEntityCacheKey) o;
+            return pid == that.pid &&
+                    Objects.equals(nullableAppCode, that.nullableAppCode);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(nullableAppCode, pid);
+        }
     }
 }

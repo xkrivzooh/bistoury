@@ -83,10 +83,12 @@ public class AgentBootstrap2 {
     private static volatile ClassLoader bistouryClassLoader;
 
     public static void premain(String args, Instrumentation inst) {
+        ps.println("AgentBootstrap2#premain args: " + nullToEmpty(args));
         main(args, inst);
     }
 
     public static void agentmain(String args, Instrumentation inst) {
+        ps.println("AgentBootstrap2#agentmain args: " + nullToEmpty(args));
         main(args, inst);
     }
 
@@ -321,5 +323,12 @@ public class AgentBootstrap2 {
             }
         }
         ps.println("Arthas server already bind.");
+    }
+
+    private static String nullToEmpty(String input) {
+        if (input == null) {
+            return "";
+        }
+        return input;
     }
 }
