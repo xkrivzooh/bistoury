@@ -32,18 +32,27 @@ public class ArthasEntity {
 
     private volatile String nullableAppCode;
 
+    private volatile boolean started = false;
+
     public ArthasEntity(String nullableAppCode, int pid) {
         this.pid = pid;
         this.nullableAppCode = nullableAppCode;
     }
 
     public void start() {
-        try {
-            ArthasStarter.start(nullableAppCode, pid);
-        } catch (Exception e) {
-            logger.error("start arthas error, nullableAppCode [{}], pid [{}]", nullableAppCode, pid, e);
-            throw new RuntimeException("start arthas error, nullableAppCode [" + Strings.nullToEmpty(nullableAppCode)
-                    + " ] " + "pid [" + pid + "]," + e.getMessage());
+        if (started) {
+            return;
+        }
+        synchronized (this) {
+            try {
+                ArthasStarter.start(nullableAppCode, pid);
+                started = true;
+            } catch (Exception e) {
+                started = false;
+                logger.error("start arthas error, nullableAppCode [{}], pid [{}]", nullableAppCode, pid, e);
+                throw new RuntimeException("start arthas error, nullableAppCode [" + Strings.nullToEmpty(nullableAppCode)
+                        + " ] " + "pid [" + pid + "]," + e.getMessage());
+            }
         }
     }
 
