@@ -148,4 +148,9 @@ public class DefaultMetaStore implements MetaStore {
         String o = attrs.get(name);
         return Numbers.toDouble(o, def);
     }
+
+    @Override
+    public boolean containsKey(String key) {
+        return this.attrs.containsKey(key);
+    }
 }

@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -38,9 +39,167 @@ public class MetaStores {
 
     public static MetaStore getAppMetaStore(String appCode) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(appCode), "appCode不能为空");
-        appMetaStores.putIfAbsent(appCode, new DefaultMetaStore());
+        appMetaStores.putIfAbsent(appCode, new AppFirstMetaStore(sharedMetaStore, new DefaultMetaStore()));
         return appMetaStores.get(appCode);
     }
 
+
+    private static class AppFirstMetaStore implements MetaStore {
+        private final MetaStore sharedMetaStore;
+        private final MetaStore appMetaStore;
+
+        public AppFirstMetaStore(MetaStore sharedMetaStore, MetaStore appMetaStore) {
+            Preconditions.checkNotNull(sharedMetaStore);
+            if (appMetaStore == null) {
+                appMetaStore = new DefaultMetaStore();
+            }
+            this.sharedMetaStore = sharedMetaStore;
+            this.appMetaStore = appMetaStore;
+        }
+
+
+        @Override
+        public void update(Map<String, String> attrs) {
+            this.appMetaStore.update(attrs);
+            this.sharedMetaStore.update(attrs);
+        }
+
+        @Override
+        public void put(String key, String value) {
+            this.appMetaStore.put(key, value);
+            this.sharedMetaStore.put(key, value);
+        }
+
+        @Override
+        public Map<String, String> getAgentInfo() {
+            Map<String, String> result = Maps.newHashMap();
+            Map<String, String> agentInfo = this.sharedMetaStore.getAgentInfo();
+            for (Map.Entry<String, String> entry : agentInfo.entrySet()) {
+                result.put(entry.getKey(), entry.getValue());
+            }
+            agentInfo = this.appMetaStore.getAgentInfo();
+            for (Map.Entry<String, String> entry : agentInfo.entrySet()) {
+                result.put(entry.getKey(), entry.getValue());
+            }
+            return result;
+        }
+
+        @Override
+        public String getStringProperty(String name) {
+            if (this.appMetaStore.containsKey(name)) {
+                return this.appMetaStore.getStringProperty(name);
+            }
+            return this.sharedMetaStore.getStringProperty(name);
+        }
+
+        @Override
+        public String getStringProperty(String name, String def) {
+            if (this.appMetaStore.containsKey(name)) {
+                return this.appMetaStore.getStringProperty(name);
+            }
+            return this.sharedMetaStore.getStringProperty(name, def);
+        }
+
+        @Override
+        public boolean getBooleanProperty(String name) {
+            if (this.appMetaStore.containsKey(name)) {
+                return this.appMetaStore.getBooleanProperty(name);
+            }
+            return this.sharedMetaStore.getBooleanProperty(name);
+        }
+
+        @Override
+        public boolean getBooleanProperty(String name, boolean def) {
+            if (this.appMetaStore.containsKey(name)) {
+                return this.appMetaStore.getBooleanProperty(name);
+            }
+            return this.sharedMetaStore.getBooleanProperty(name, def);
+        }
+
+        @Override
+        public Date getDateProperty(String name) {
+            if (this.appMetaStore.containsKey(name)) {
+                return this.appMetaStore.getDateProperty(name);
+            }
+            return this.sharedMetaStore.getDateProperty(name);
+        }
+
+        @Override
+        public Integer getIntegerProperty(String name) {
+            if (this.appMetaStore.containsKey(name)) {
+                return this.appMetaStore.getIntegerProperty(name);
+            }
+            return this.sharedMetaStore.getIntegerProperty(name);
+        }
+
+        @Override
+        public int getIntProperty(String name) {
+            if (this.appMetaStore.containsKey(name)) {
+                return this.appMetaStore.getIntProperty(name);
+            }
+            return this.sharedMetaStore.getIntProperty(name);
+        }
+
+        @Override
+        public int getIntProperty(String name, int def) {
+            if (this.appMetaStore.containsKey(name)) {
+                return this.appMetaStore.getIntProperty(name);
+            }
+            return this.sharedMetaStore.getIntProperty(name, def);
+        }
+
+        @Override
+        public long getLongProperty(String name) {
+            if (this.appMetaStore.containsKey(name)) {
+                return this.appMetaStore.getLongProperty(name);
+            }
+            return this.sharedMetaStore.getLongProperty(name);
+        }
+
+        @Override
+        public long getLongProperty(String name, long def) {
+            if (this.appMetaStore.containsKey(name)) {
+                return this.appMetaStore.getLongProperty(name);
+            }
+            return this.sharedMetaStore.getLongProperty(name, def);
+        }
+
+        @Override
+        public float getFloatProperty(String name) {
+            if (this.appMetaStore.containsKey(name)) {
+                return this.appMetaStore.getFloatProperty(name);
+            }
+            return this.sharedMetaStore.getFloatProperty(name);
+        }
+
+        @Override
+        public float getFloatProperty(String name, float def) {
+            if (this.appMetaStore.containsKey(name)) {
+                return this.appMetaStore.getFloatProperty(name);
+            }
+            return this.sharedMetaStore.getFloatProperty(name, def);
+        }
+
+        @Override
+        public double getDoubleProperty(String name) {
+            if (this.appMetaStore.containsKey(name)) {
+                return this.appMetaStore.getDoubleProperty(name);
+            }
+            return this.sharedMetaStore.getDoubleProperty(name);
+        }
+
+        @Override
+        public double getDoubleProperty(String name, double def) {
+            if (this.appMetaStore.containsKey(name)) {
+                return this.appMetaStore.getDoubleProperty(name);
+            }
+            return this.sharedMetaStore.getDoubleProperty(name, def);
+        }
+
+        @Override
+        public boolean containsKey(String key) {
+            return this.appMetaStore.containsKey(key) || this.sharedMetaStore.containsKey(key);
+        }
+    }
 
 }

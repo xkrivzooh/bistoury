@@ -58,4 +58,6 @@ public interface MetaStore {
     double getDoubleProperty(String name);
 
     double getDoubleProperty(String name, double def);
+
+    boolean containsKey(String key);
 }
