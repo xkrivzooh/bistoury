@@ -36,7 +36,7 @@ public class ArthasTelnetPortHelper {
 
         int availablePort = NetWorkUtils.getAvailablePort();
         appMetaStore.put(AgentConstants.TELNET_CONNECT_PORT, String.valueOf(availablePort));
-        logger.info("应用[{}]选择的telnet port为[{}]", nullableAppCode, port);
+        logger.info("应用[{}]选择的telnet port为[{}]", nullableAppCode, availablePort);
         return availablePort;
     }
 }
