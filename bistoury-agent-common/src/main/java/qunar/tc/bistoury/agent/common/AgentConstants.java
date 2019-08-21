@@ -18,6 +18,7 @@
 package qunar.tc.bistoury.agent.common;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import io.netty.util.AttributeKey;
 
 /**
@@ -37,6 +38,8 @@ public class AgentConstants {
 
 
     public static final Joiner COMMA_JOINER = Joiner.on(",").skipNulls();
+
+    public static final Splitter COMMA_SPLITTER = Splitter.on(",").trimResults();
 
     public static final String COLON = ":";
 

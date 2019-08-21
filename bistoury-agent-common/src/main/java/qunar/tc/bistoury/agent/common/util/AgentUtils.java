@@ -1,7 +1,6 @@
 package qunar.tc.bistoury.agent.common.util;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import qunar.tc.bistoury.agent.common.AgentConstants;
@@ -10,6 +9,7 @@ import qunar.tc.bistoury.clientside.common.meta.MetaStores;
 
 import java.util.Set;
 
+import static qunar.tc.bistoury.agent.common.AgentConstants.COMMA_SPLITTER;
 import static qunar.tc.bistoury.agent.common.AgentConstants.SUPPORT_GET_PID_FROM_PROXY;
 
 /**
@@ -18,7 +18,6 @@ import static qunar.tc.bistoury.agent.common.AgentConstants.SUPPORT_GET_PID_FROM
  */
 public class AgentUtils {
 
-    public static final Splitter COMMA_SPLITTER = Splitter.on(",").trimResults();
 
     public static boolean supporGetPidFromProxy() {
         MetaStore sharedMetaStore = MetaStores.getSharedMetaStore();

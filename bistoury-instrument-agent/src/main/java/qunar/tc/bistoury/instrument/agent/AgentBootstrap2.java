@@ -17,6 +17,8 @@
 
 package qunar.tc.bistoury.instrument.agent;
 
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import qunar.tc.bistoury.instrument.spy.BistourySpys1;
 
 import java.arthas.Spy;
@@ -65,6 +67,9 @@ public class AgentBootstrap2 {
 
     private static PrintStream ps = System.err;
 
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS");
+
+
     static {
         try {
             File log = new File(System.getProperty("user.home") + File.separator + "logs" + File.separator
@@ -83,12 +88,12 @@ public class AgentBootstrap2 {
     private static volatile ClassLoader bistouryClassLoader;
 
     public static void premain(String args, Instrumentation inst) {
-        ps.println("AgentBootstrap2#premain args: " + nullToEmpty(args));
+        ps.println(addTimeInfoToLog("AgentBootstrap2#premain args: " + nullToEmpty(args)));
         main(args, inst);
     }
 
     public static void agentmain(String args, Instrumentation inst) {
-        ps.println("AgentBootstrap2#agentmain args: " + nullToEmpty(args));
+        ps.println(addTimeInfoToLog("AgentBootstrap2#agentmain args: " + nullToEmpty(args)));
         main(args, inst);
     }
 
@@ -118,7 +123,7 @@ public class AgentBootstrap2 {
             for (int i = 0; i < jars.length; ++i) {
                 urls[i] = jars[i].toURI().toURL();
             }
-            ps.println("bistoury classloader urls, " + Arrays.toString(urls));
+            ps.println(addTimeInfoToLog("bistoury classloader urls, " + Arrays.toString(urls)));
             bistouryClassLoader = new BistouryClassloader(urls, findUserClassLoader(inst, libClass));
             initMagic((BistouryClassloader) bistouryClassLoader, dir);
         }
@@ -132,7 +137,7 @@ public class AgentBootstrap2 {
     // 这个方法和DefaultDebugger里面是一样的，但是这个地方不应该有依赖，所以两边都要写
     private static Class<?> findLibClass(Instrumentation inst, final String libClass) {
         if (libClass == null || "".equals(libClass)) {
-            ps.println("can not find lib class");
+            ps.println(addTimeInfoToLog("can not find lib class"));
             throw new IllegalStateException("can not find lib class");
         }
 
@@ -142,7 +147,7 @@ public class AgentBootstrap2 {
                 return clazz;
             }
         }
-        ps.println("can not find lib class");
+        ps.println(addTimeInfoToLog("can not find lib class"));
         throw new IllegalStateException("can not find lib class");
     }
 
@@ -187,7 +192,7 @@ public class AgentBootstrap2 {
 
             bistouryClassloader.setMagicClassSetting(magicClassLoader, isMagicClassMethod);
         } catch (Throwable e) {
-            ps.println("init magic error, " + e.getMessage());
+            ps.println(addTimeInfoToLog("init magic error, " + e.getMessage()));
             e.printStackTrace(ps);
         }
     }
@@ -231,7 +236,7 @@ public class AgentBootstrap2 {
 
     private static synchronized void main(final String args, final Instrumentation inst) {
         try {
-            ps.println("bistoury server agent start...");
+            ps.println(addTimeInfoToLog("bistoury server agent start..."));
 
             String[] argsArr = args.split(DELIMITER);
             // 传递的args参数分三个部分:agentJar路径、agentArgs、用户类, 分别是Agent的JAR包路径、期望传递到服务端的参数和用户应用中的类
@@ -313,16 +318,16 @@ public class AgentBootstrap2 {
         boolean isBind = (Boolean) bootstrapClass.getMethod(IS_BIND).invoke(bootstrap);
         if (!isBind) {
             try {
-                ps.println("bistoury start to bind...");
+                ps.println(addTimeInfoToLog("bistoury start to bind..."));
                 bootstrapClass.getMethod(BIND, classOfConfigure).invoke(bootstrap, configure);
-                ps.println("bistoury server bind success.");
+                ps.println(addTimeInfoToLog("bistoury server bind success."));
                 return;
             } catch (Exception e) {
-                ps.println("bistoury server port binding failed! Please check $HOME/logs/arthas/arthas.log for more details.");
+                ps.println(addTimeInfoToLog("bistoury server port binding failed! Please check $HOME/logs/arthas/arthas.log for more details."));
                 throw e;
             }
         }
-        ps.println("Arthas server already bind.");
+        ps.println(addTimeInfoToLog("Arthas server already bind."));
     }
 
     private static String nullToEmpty(String input) {
@@ -331,4 +336,11 @@ public class AgentBootstrap2 {
         }
         return input;
     }
+
+    private static String addTimeInfoToLog(String log) {
+        String timeInfo = String.valueOf(DATE_TIME_FORMATTER.print(System.currentTimeMillis()));
+        return timeInfo + " " + nullToEmpty(log);
+    }
+
+
 }
