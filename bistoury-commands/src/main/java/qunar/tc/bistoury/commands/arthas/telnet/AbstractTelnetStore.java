@@ -17,17 +17,13 @@
 
 package qunar.tc.bistoury.commands.arthas.telnet;
 
-import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import org.apache.commons.net.telnet.TelnetClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import qunar.tc.bistoury.agent.common.AgentConstants;
-import qunar.tc.bistoury.agent.common.util.AgentUtils;
-import qunar.tc.bistoury.clientside.common.meta.MetaStore;
-import qunar.tc.bistoury.clientside.common.meta.MetaStores;
+import qunar.tc.bistoury.agent.common.pid.PidUtils;
 import qunar.tc.bistoury.commands.arthas.ArthasEntity;
 import qunar.tc.bistoury.commands.arthas.ArthasTelnetPortHelper;
 import qunar.tc.bistoury.commands.arthas.TelnetConstants;
@@ -114,7 +110,7 @@ public abstract class AbstractTelnetStore implements TelnetStore {
     protected abstract Telnet doCreateTelnet(TelnetClient client) throws IOException;
 
     private synchronized TelnetClient doGetTelnet(String nullableAppCode, int pid) {
-        TelnetClient client = tryGetClient(nullableAppCode);
+        TelnetClient client = tryGetClient(nullableAppCode, pid);
         if (client != null) {
             return client;
         }
@@ -131,9 +127,9 @@ public abstract class AbstractTelnetStore implements TelnetStore {
         }
     }
 
-    private TelnetClient tryGetClient(String nullableAppCode) {
+    private TelnetClient tryGetClient(String nullableAppCode, int pid) {
         try {
-            return createClient(nullableAppCode);
+            return createClient(nullableAppCode, pid);
         } catch (Exception e) {
             return null;
         }
@@ -141,7 +137,8 @@ public abstract class AbstractTelnetStore implements TelnetStore {
 
     @Override
     public Telnet tryGetTelnet(String nullableAppCode) throws Exception {
-        TelnetClient client = tryGetClient(nullableAppCode);
+        int pid = PidUtils.getPid(nullableAppCode);
+        TelnetClient client = tryGetClient(nullableAppCode, pid);
         if (client != null) {
             return createTelnet(client, CheckVersion.notCheck);
         }
@@ -168,12 +165,9 @@ public abstract class AbstractTelnetStore implements TelnetStore {
     }
 
     private TelnetClient createClient(String nullableAppCode) throws IOException {
-        if (AgentUtils.supporGetPidFromProxy()) {
-            MetaStore appMetaStore = MetaStores.getAppMetaStore(nullableAppCode);
-            Integer pid = appMetaStore.getIntegerProperty(AgentConstants.PID);
-            Preconditions.checkState(pid != null, String.format("应用[%s]的pid信息没有获取到", nullableAppCode));
-            startArthas(nullableAppCode, pid);
-        }
+        int pid = PidUtils.getPid(nullableAppCode);
+        startArthas(nullableAppCode, pid);
+
         TelnetClient client = new TelnetClient();
         client.setConnectTimeout(TelnetConstants.TELNET_CONNECT_TIMEOUT);
         client.connect(TelnetConstants.TELNET_CONNECTION_IP, ArthasTelnetPortHelper.getTelnetPort(nullableAppCode));
