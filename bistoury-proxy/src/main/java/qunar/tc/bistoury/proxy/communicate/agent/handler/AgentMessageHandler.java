@@ -23,7 +23,12 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import qunar.tc.bistoury.proxy.communicate.agent.AgentRelatedDatagramWrapperService;
+import qunar.tc.bistoury.proxy.generator.IdGenerator;
+import qunar.tc.bistoury.proxy.util.ChannelUtils;
+import qunar.tc.bistoury.remoting.protocol.CommandCode;
 import qunar.tc.bistoury.remoting.protocol.Datagram;
+import qunar.tc.bistoury.remoting.protocol.RemotingBuilder;
 
 import java.util.List;
 import java.util.Map;
@@ -37,15 +42,30 @@ public class AgentMessageHandler extends SimpleChannelInboundHandler<Datagram> {
     private static final Logger logger = LoggerFactory.getLogger(AgentMessageHandler.class);
 
     private final Map<Integer, AgentMessageProcessor> processorMap;
+    private final IdGenerator idGenerator;
+    private final AgentRelatedDatagramWrapperService agentRelatedDatagramWrapperService;
 
-    public AgentMessageHandler(List<AgentMessageProcessor> processors) {
+    public AgentMessageHandler(List<AgentMessageProcessor> processors, IdGenerator generator,
+                               AgentRelatedDatagramWrapperService agentRelatedDatagramWrapperService) {
         ImmutableMap.Builder<Integer, AgentMessageProcessor> builder = new ImmutableMap.Builder<>();
         for (AgentMessageProcessor processor : processors) {
-            for (int code: processor.codes()) {
+            for (int code : processor.codes()) {
                 builder.put(code, processor);
             }
         }
         processorMap = builder.build();
+        this.idGenerator = generator;
+        this.agentRelatedDatagramWrapperService = agentRelatedDatagramWrapperService;
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        Datagram datagram = RemotingBuilder.buildRequestDatagram(CommandCode.REQ_TYPE_AGENT_SERVER_PID_CONFIG_INFO_FETCH.getCode(),
+                idGenerator.generateId(), null);
+        agentRelatedDatagramWrapperService.addPidRelatedConfigToHeader(datagram,
+                new AgentRelatedDatagramWrapperService.AgentInfo(ChannelUtils.getIp(ctx.channel())));
+        ctx.writeAndFlush(datagram);
+        super.channelActive(ctx);
     }
 
     @Override

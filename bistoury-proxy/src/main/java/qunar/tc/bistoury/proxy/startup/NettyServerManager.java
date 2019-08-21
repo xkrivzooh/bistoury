@@ -37,6 +37,7 @@ import qunar.tc.bistoury.proxy.communicate.agent.handler.AgentMessageProcessor;
 import qunar.tc.bistoury.proxy.communicate.ui.NettyServerForUi;
 import qunar.tc.bistoury.proxy.communicate.ui.UiConnectionStore;
 import qunar.tc.bistoury.proxy.communicate.ui.command.CommunicateCommandStore;
+import qunar.tc.bistoury.proxy.generator.IdGenerator;
 import qunar.tc.bistoury.serverside.agile.Conf;
 import qunar.tc.bistoury.serverside.agile.LocalHost;
 import qunar.tc.bistoury.serverside.common.ZKClient;
@@ -85,6 +86,9 @@ public class NettyServerManager {
     @Autowired
     private List<AgentMessageProcessor> agentMessageProcessors;
 
+    @Autowired
+    private IdGenerator generator;
+
     private volatile String uiNode;
     private ZKClient zkClient;
     private Conf conf;
@@ -126,7 +130,7 @@ public class NettyServerManager {
     }
 
     private NettyServerForAgent startAgentServer(Conf conf) {
-        AgentMessageHandler handler = new AgentMessageHandler(agentMessageProcessors);
+        AgentMessageHandler handler = new AgentMessageHandler(agentMessageProcessors, generator, agentRelatedDatagramWrapperService);
         NettyServerForAgent serverForAgent = new NettyServerForAgent(conf, handler);
         serverForAgent.start();
         return serverForAgent;
