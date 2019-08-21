@@ -20,6 +20,11 @@ public class AgentUtils {
 
 
     public static boolean supporGetPidFromProxy() {
+        String supportGetPidFronProxy = System.getProperty(SUPPORT_GET_PID_FROM_PROXY);
+        if (!Strings.isNullOrEmpty(supportGetPidFronProxy)) {
+            return supportGetPidFronProxy.equalsIgnoreCase(Boolean.TRUE.toString());
+        }
+
         MetaStore sharedMetaStore = MetaStores.getSharedMetaStore();
         String supportedGetPidFromProxy = sharedMetaStore.getStringProperty(SUPPORT_GET_PID_FROM_PROXY, Boolean.FALSE.toString());
         return supportedGetPidFromProxy.equalsIgnoreCase(Boolean.TRUE.toString());
