@@ -38,6 +38,8 @@ public class AgentConstants {
 
     public static final Joiner COMMA_JOINER = Joiner.on(",").skipNulls();
 
+    public static final String COLON = ":";
+
     //////// agent shared meta store key
     public static final String AGENT_SERVER_CONFIG_INFO = "_AGENT_SERVER_CONFIG_INFO";
 
@@ -54,6 +56,8 @@ public class AgentConstants {
     public static final String PID = "_PID";
 
     public static final String TELNET_CONNECT_PORT = "_TELNET_CONNECT_PORT";
+
+    public static final String APP_PERSISTENT_STORE_BASE_PREFIX = "_APP_PERSISTENT_STORE_BASE_PREFIX";
 
 }
 

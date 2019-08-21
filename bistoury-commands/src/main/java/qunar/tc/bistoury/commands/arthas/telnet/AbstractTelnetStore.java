@@ -123,6 +123,7 @@ public abstract class AbstractTelnetStore implements TelnetStore {
             }
         } catch (Exception e) {
             resetClient(nullableAppCode, pid);
+            ArthasTelnetPortHelper.resetTelnetPort(nullableAppCode);
             throw new IllegalStateException("can not init bistoury, " + e.getMessage(), e);
         }
     }

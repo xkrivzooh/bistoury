@@ -81,7 +81,11 @@ public class PidUtils {
         }
         Preconditions.checkArgument(!Strings.isNullOrEmpty(nullableAppCode), "appCode不能为空");
         MetaStore appMetaStore = MetaStores.getAppMetaStore(nullableAppCode);
-        return appMetaStore.getIntProperty(AgentConstants.PID);
+        Integer pid = appMetaStore.getIntegerProperty(AgentConstants.PID);
+        if (pid == null) {
+            throw new RuntimeException(String.format("没有获取到应用[%s]的pid", Strings.nullToEmpty(nullableAppCode)));
+        }
+        return pid;
     }
 
 }
