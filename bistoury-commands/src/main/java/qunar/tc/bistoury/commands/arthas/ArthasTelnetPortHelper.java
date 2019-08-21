@@ -24,8 +24,12 @@ public class ArthasTelnetPortHelper {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(nullableAppCode), "appCode必须不能为空");
         MetaStore appMetaStore = MetaStores.getAppMetaStore(nullableAppCode);
 
-        int port = appMetaStore.getIntProperty(AgentConstants.TELNET_CONNECT_PORT);
-        int availablePort = NetWorkUtils.getAvailablePort(port);
+        Integer port = appMetaStore.getIntegerProperty(AgentConstants.TELNET_CONNECT_PORT);
+        if (port != null) {
+            return port;
+        }
+
+        int availablePort = NetWorkUtils.getAvailablePort();
         appMetaStore.put(AgentConstants.TELNET_CONNECT_PORT, String.valueOf(availablePort));
         return availablePort;
     }
