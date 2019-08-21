@@ -17,8 +17,6 @@
 
 package qunar.tc.bistoury.instrument.agent;
 
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import qunar.tc.bistoury.instrument.spy.BistourySpys1;
 
 import java.arthas.Spy;
@@ -66,9 +64,6 @@ public class AgentBootstrap2 {
     private static final String DELIMITER = "\\$\\|\\$";
 
     private static PrintStream ps = System.err;
-
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS");
-
 
     static {
         try {
@@ -338,8 +333,8 @@ public class AgentBootstrap2 {
     }
 
     private static String addTimeInfoToLog(String log) {
-        String timeInfo = String.valueOf(DATE_TIME_FORMATTER.print(System.currentTimeMillis()));
-        return timeInfo + " " + nullToEmpty(log);
+        String timeInfo = String.valueOf(System.currentTimeMillis());
+        return timeInfo + " - " + nullToEmpty(log);
     }
 
 
