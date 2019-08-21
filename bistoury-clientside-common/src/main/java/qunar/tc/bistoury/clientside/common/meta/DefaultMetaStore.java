@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -45,7 +44,9 @@ public class DefaultMetaStore implements MetaStore {
     @Override
     public void update(Map<String, String> attrs) {
         logger.debug("update agent info, {}", attrs);
-        this.attrs = attrs;
+        if (attrs != null && attrs.size() > 0) {
+            this.attrs.putAll(attrs);
+        }
     }
 
     @Override
