@@ -17,12 +17,17 @@
 
 package qunar.tc.bistoury.commands.arthas.telnet;
 
+import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import org.apache.commons.net.telnet.TelnetClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import qunar.tc.bistoury.agent.common.AgentConstants;
+import qunar.tc.bistoury.agent.common.util.AgentUtils;
+import qunar.tc.bistoury.clientside.common.meta.MetaStore;
+import qunar.tc.bistoury.clientside.common.meta.MetaStores;
 import qunar.tc.bistoury.commands.arthas.ArthasEntity;
 import qunar.tc.bistoury.commands.arthas.ArthasTelnetPortHelper;
 import qunar.tc.bistoury.commands.arthas.TelnetConstants;
@@ -158,16 +163,26 @@ public abstract class AbstractTelnetStore implements TelnetStore {
     }
 
     private TelnetClient forceCreateClient(String nullableAppCode, int pid) throws IOException {
-        ArthasEntity arthasEntity = ARTHAS_ENTITY_CACHE.getUnchecked(new ArthasEntityCacheKey(nullableAppCode, pid));
-        arthasEntity.start();
+        startArthas(nullableAppCode, pid);
         return createClient(nullableAppCode);
     }
 
     private TelnetClient createClient(String nullableAppCode) throws IOException {
+        if (AgentUtils.supporGetPidFromProxy()) {
+            MetaStore appMetaStore = MetaStores.getAppMetaStore(nullableAppCode);
+            Integer pid = appMetaStore.getIntegerProperty(AgentConstants.PID);
+            Preconditions.checkState(pid != null, String.format("应用[%s]的pid信息没有获取到", nullableAppCode));
+            startArthas(nullableAppCode, pid);
+        }
         TelnetClient client = new TelnetClient();
         client.setConnectTimeout(TelnetConstants.TELNET_CONNECT_TIMEOUT);
         client.connect(TelnetConstants.TELNET_CONNECTION_IP, ArthasTelnetPortHelper.getTelnetPort(nullableAppCode));
         return client;
+    }
+
+    private void startArthas(String nullableAppCode, int pid) {
+        ArthasEntity arthasEntity = ARTHAS_ENTITY_CACHE.getUnchecked(new ArthasEntityCacheKey(nullableAppCode, pid));
+        arthasEntity.start();
     }
 
     private static final class ArthasEntityCacheKey {
